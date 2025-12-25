@@ -6,3 +6,4 @@ const Total = (props) => {
     </p>
   );
 };
+export default Total;
