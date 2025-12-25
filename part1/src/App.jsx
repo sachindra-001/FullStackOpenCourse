@@ -1,27 +1,30 @@
+import Header from "./Header.jsx";
+import Content from "./Content.jsx";
+import Total from "./Total.jsx";
+
 const App = () => {
   const course = "Half Stack application development";
-  const part1 = "Fundamentals of React";
-  const exercises1 = 10;
-  const part2 = "Using props to pass data";
-  const exercises2 = 7;
-  const part3 = "State of a component";
-  const exercises3 = 14;
+  const object1 = {
+    part1: "Fundamentals of React",
+    exercises1: 10,
+  };
+  const object2 = {
+    part2: "Using props to pass data",
+    exercises2: 7,
+  };
+  const object3 = {
+    part3: "State of a component",
+    exercises3: 14,
+  };
 
   return (
     <div>
       <Header course={course} />
-      <Content
-        part1={part1}
-        exercises1={exercises1}
-        part2={part2}
-        exercises2={exercises2}
-        part3={part3}
-        exercises3={exercises3}
-      />
+      <Content part1={object1} part2={object2} part3={object3} />
       <Total
-        exercises1={exercises1}
-        exercises2={exercises2}
-        exercises3={exercises3}
+        exercises1={object1.exercises1}
+        exercises2={object2.exercises2}
+        exercises3={object3.exercises3}
       />
     </div>
   );
