@@ -1,41 +1,35 @@
-import Header from "./Header.jsx";
-import Content from "./Content.jsx";
-import Total from "./Total.jsx";
+import { useState } from "react";
 
 const App = () => {
-  const course = {
-    name: "Half Stack application development",
-    Part: [
-      {
-        part1: "Fundamentals of React",
-        exercises1: 10,
-      },
-      {
-        part2: "Using props to pass data",
-        exercises2: 7,
-      },
-      {
-        part3: "State of a component",
-        exercises3: 14,
-      },
-    ],
-  };
+  const [good, setGood] = useState(0);
+  const [neutral, setNeutral] = useState(0);
+  const [bad, setBad] = useState(0);
+
+  // Calculate values for statistics
+  const total = good + neutral + bad;
+
+  // To avoid division by zero when the app starts, we can use a conditional
+  const average = total === 0 ? 0 : (good - bad) / total;
+  const positivePercentage = total === 0 ? 0 : (good / total) * 100;
+
   return (
     <div>
-      <Header course={course.name} />
-      <Content
-        part1={course.Part[0]}
-        part2={course.Part[1]}
-        part3={course.Part[2]}
-      />
-      <Total
-        exercises1={course.Part[0].exercises1}
-        exercises2={course.Part[1].exercises2}
-        exercises3={course.Part[2].exercises3}
-      />
+      <h1>give feedback</h1>
+      <button onClick={() => setGood(good + 1)}>good</button>
+      <button onClick={() => setNeutral(neutral + 1)}>neutral</button>
+      <button onClick={() => setBad(bad + 1)}>bad</button>
+
+      <h2>Statistics</h2>
+      <p>good {good}</p>
+      <p>neutral {neutral}</p>
+      <p>bad {bad}</p>
+
+      {/* New statistics below */}
+      <p>all {total}</p>
+      <p>average {average}</p>
+      <p>positive {positivePercentage} %</p>
     </div>
   );
-  const { counter } = props;
-  return <div>{counter}</div>;
 };
+
 export default App;
