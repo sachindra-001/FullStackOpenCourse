@@ -1,5 +1,7 @@
 const Total = ({ parts }) => {
-  // sum is the accumulator, part is the current item in the array
+  // Debug: Check the console to see if data arrives here
+  console.log("Total component received these parts:", parts);
+
   const totalAmount = parts.reduce((sum, part) => sum + part.exercises, 0);
 
   return (
@@ -8,5 +10,4 @@ const Total = ({ parts }) => {
     </p>
   );
 };
-
 export default Total;
