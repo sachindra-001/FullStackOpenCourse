@@ -15,17 +15,41 @@ const App = () => {
   console.log("render", persons.length, "persons");
   const addPerson = (event) => {
     event.preventDefault();
-    if (persons.some((p) => p.name.toLowerCase() === newName.toLowerCase())) {
-      alert(`${newName} is already added to phonebook`);
-      return;
+    const existingPerson = persons.find(
+      (p) => p.name.toLowerCase() === newName.toLowerCase(),
+    );
+
+    if (existingPerson) {
+      const confirmUpdate = window.confirm(
+        `${newName} is already added to phonebook, replace the old number with a new one?`,
+      );
+      if (confirmUpdate) {
+        const changedPerson = { ...existingPerson, number: newNumber };
+        noteService
+          .update(existingPerson.id, changedPerson)
+          .then((returnedPerson) => {
+            setPersons(
+              persons.map((person) =>
+                person.id !== existingPerson.id ? person : returnedPerson,
+              ),
+            );
+            setNewName("");
+            setNewNumber("");
+          })
+          .catch((error) => {
+            alert(
+              `Information of ${newName} has already been removed from server`,
+            );
+            setPersons(persons.filter((p) => p.id !== existingPerson.id));
+          });
+      }
+      return; // Stop the function here if we dealt with an existing person
     }
 
-    const personObject = {
-      name: newName,
-      number: newNumber,
-    };
-    noteService.create(personObject).then((returnedNote) => {
-      setPersons(persons.concat(returnedNote));
+    // If person doesn't exist, proceed with normal CREATE (POST) logic
+    const personObject = { name: newName, number: newNumber };
+    noteService.create(personObject).then((returnedPerson) => {
+      setPersons(persons.concat(returnedPerson));
       setNewName("");
       setNewNumber("");
     });
