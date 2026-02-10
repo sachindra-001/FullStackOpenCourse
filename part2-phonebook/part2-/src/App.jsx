@@ -23,7 +23,6 @@ const App = () => {
     const personObject = {
       name: newName,
       number: newNumber,
-      id: persons.length + 1,
     };
     noteService.create(personObject).then((returnedNote) => {
       setPersons(persons.concat(returnedNote));
@@ -40,7 +39,23 @@ const App = () => {
       : persons.filter((person) =>
           person.name.toLowerCase().includes(searchQuery.toLowerCase()),
         );
+  const deletePerson = (id, name) => {
+    if (window.confirm(`Delete ${name}?`)) {
+      noteService
+        .remove(id)
+        .then(() => {
+          // Success: remove from local state
+          setPersons(persons.filter((p) => p.id !== id));
+        })
+        .catch((error) => {
+          // ERROR: The 404 you see in the console is caught here
+          alert(`Information of ${name} has already been removed from server`);
 
+          // Remove the "ghost" person from your UI state anyway
+          setPersons(persons.filter((p) => p.id !== id));
+        });
+    }
+  };
   return (
     <div>
       <h2>Phonebook</h2>
@@ -77,6 +92,9 @@ const App = () => {
       {personsToShow.map((person) => (
         <p key={person.id}>
           {person.name} {person.number}
+          <button onClick={() => deletePerson(person.id, person.name)}>
+            delete
+          </button>
         </p>
       ))}
     </div>
