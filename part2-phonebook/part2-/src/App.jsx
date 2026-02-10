@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-
+import noteService from "./services/phone";
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
@@ -8,10 +8,8 @@ const App = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    console.log("effect");
-    axios.get("http://localhost:3001/persons").then((response) => {
-      console.log("promise fulfilled");
-      setPersons(response.data);
+    noteService.getAll().then((initialNotes) => {
+      setPersons(initialNotes);
     });
   }, []);
   console.log("render", persons.length, "persons");
@@ -27,10 +25,11 @@ const App = () => {
       number: newNumber,
       id: persons.length + 1,
     };
-
-    setPersons(persons.concat(personObject));
-    setNewName("");
-    setNewNumber("");
+    noteService.create(personObject).then((returnedNote) => {
+      setPersons(persons.concat(returnedNote));
+      setNewName("");
+      setNewNumber("");
+    });
   };
 
   // Logic to filter the display list
