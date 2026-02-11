@@ -1,104 +1,170 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import noteService from "./services/phone";
+import Notification from "./notification";
+import "./index.css";
+
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Notification state
+  const [message, setMessage] = useState({
+    message: null,
+    type: "success",
+  });
+
+  // Fetch data
   useEffect(() => {
     noteService.getAll().then((initialNotes) => {
       setPersons(initialNotes);
     });
   }, []);
-  console.log("render", persons.length, "persons");
+
+  // Add / Update person
   const addPerson = (event) => {
     event.preventDefault();
+
     const existingPerson = persons.find(
       (p) => p.name.toLowerCase() === newName.toLowerCase(),
     );
 
+    // UPDATE
     if (existingPerson) {
-      const confirmUpdate = window.confirm(
-        `${newName} is already added to phonebook, replace the old number with a new one?`,
-      );
-      if (confirmUpdate) {
-        const changedPerson = { ...existingPerson, number: newNumber };
+      if (window.confirm(`${newName} is already added, replace number?`)) {
+        const changedPerson = {
+          ...existingPerson,
+          number: newNumber,
+        };
+
         noteService
           .update(existingPerson.id, changedPerson)
           .then((returnedPerson) => {
             setPersons(
-              persons.map((person) =>
-                person.id !== existingPerson.id ? person : returnedPerson,
+              persons.map((p) =>
+                p.id !== existingPerson.id ? p : returnedPerson,
               ),
             );
+
+            setMessage({
+              message: `Updated ${returnedPerson.name}`,
+              type: "success",
+            });
+
             setNewName("");
             setNewNumber("");
+
+            setTimeout(() => {
+              setMessage({ message: null, type: "success" });
+            }, 5000);
           })
-          .catch((error) => {
-            alert(
-              `Information of ${newName} has already been removed from server`,
-            );
+          .catch(() => {
+            // If person already deleted in another browser
+            setMessage({
+              message: `Information of ${newName} has already been removed from server`,
+              type: "error",
+            });
+
             setPersons(persons.filter((p) => p.id !== existingPerson.id));
+
+            setTimeout(() => {
+              setMessage({ message: null, type: "error" });
+            }, 5000);
           });
       }
-      return; // Stop the function here if we dealt with an existing person
     }
 
-    // If person doesn't exist, proceed with normal CREATE (POST) logic
-    const personObject = { name: newName, number: newNumber };
-    noteService.create(personObject).then((returnedPerson) => {
-      setPersons(persons.concat(returnedPerson));
-      setNewName("");
-      setNewNumber("");
-    });
+    // CREATE
+    else {
+      const personObject = {
+        name: newName,
+        number: newNumber,
+      };
+
+      noteService.create(personObject).then((returnedPerson) => {
+        setPersons(persons.concat(returnedPerson));
+
+        setMessage({
+          message: `Added ${returnedPerson.name}`,
+          type: "success",
+        });
+
+        setNewName("");
+        setNewNumber("");
+
+        setTimeout(() => {
+          setMessage({ message: null, type: "success" });
+        }, 5000);
+      });
+    }
   };
 
-  // Logic to filter the display list
-  // If searchQuery is empty, it shows all persons
+  // Delete person
+  const deletePerson = (id, name) => {
+    if (window.confirm(`Delete ${name}?`)) {
+      noteService
+        .remove(id)
+        .then(() => {
+          setPersons(persons.filter((p) => p.id !== id));
+
+          setMessage({
+            message: `Deleted ${name}`,
+            type: "success",
+          });
+
+          setTimeout(() => {
+            setMessage({ message: null, type: "success" });
+          }, 5000);
+        })
+        .catch(() => {
+          setMessage({
+            message: `Information of ${name} was already removed`,
+            type: "error",
+          });
+
+          setPersons(persons.filter((p) => p.id !== id));
+
+          setTimeout(() => {
+            setMessage({ message: null, type: "error" });
+          }, 5000);
+        });
+    }
+  };
+
+  // Filter
   const personsToShow =
     searchQuery === ""
       ? persons
       : persons.filter((person) =>
           person.name.toLowerCase().includes(searchQuery.toLowerCase()),
         );
-  const deletePerson = (id, name) => {
-    if (window.confirm(`Delete ${name}?`)) {
-      noteService
-        .remove(id)
-        .then(() => {
-          // Success: remove from local state
-          setPersons(persons.filter((p) => p.id !== id));
-        })
-        .catch((error) => {
-          // ERROR: The 404 you see in the console is caught here
-          alert(`Information of ${name} has already been removed from server`);
 
-          // Remove the "ghost" person from your UI state anyway
-          setPersons(persons.filter((p) => p.id !== id));
-        });
-    }
-  };
   return (
     <div>
       <h2>Phonebook</h2>
 
-      {/* Search Field */}
+      {/* Notification */}
+      <Notification message={message} />
+
+      {/* Filter */}
       <div>
-        filter shown with:
+        filter shown with:{" "}
         <input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
 
+      {/* Form */}
       <h3>Add a new</h3>
+
       <form onSubmit={addPerson}>
         <div>
           name:{" "}
           <input value={newName} onChange={(e) => setNewName(e.target.value)} />
         </div>
+
         <div>
           number:{" "}
           <input
@@ -106,16 +172,18 @@ const App = () => {
             onChange={(e) => setNewNumber(e.target.value)}
           />
         </div>
+
         <div>
           <button type="submit">add</button>
         </div>
       </form>
 
+      {/* Numbers */}
       <h3>Numbers</h3>
-      {/* Use personsToShow instead of persons */}
+
       {personsToShow.map((person) => (
         <p key={person.id}>
-          {person.name} {person.number}
+          {person.name} {person.number}{" "}
           <button onClick={() => deletePerson(person.id, person.name)}>
             delete
           </button>
