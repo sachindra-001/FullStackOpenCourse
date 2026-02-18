@@ -1,5 +1,7 @@
 const express = require("express");
 const app = express();
+const morgan = require("morgan");
+app.use(morgan("tiny"));
 
 let persons = [
   {
@@ -29,7 +31,13 @@ app.use(express.json());
 app.get("/api/persons", (request, response) => {
   response.json(persons);
 });
+morgan.token("body", (req, res) => {
+  return req.method === "POST" ? JSON.stringify(req.body) : "";
+});
 
+app.use(
+  morgan(":method :url :status :res[content-length] - :response-time ms :body"),
+);
 const PORT = 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
@@ -75,11 +83,13 @@ app.post("/api/persons", (request, response) => {
       error: "name or number missing",
     });
   }
-const nameExists = persons.find(p => p.name.toLowerCase() === body.name.toLowerCase())
+  const nameExists = persons.find(
+    (p) => p.name.toLowerCase() === body.name.toLowerCase(),
+  );
   if (nameExists) {
-    return response.status(400).json({ 
-      error: 'name must be unique' 
-    })
+    return response.status(400).json({
+      error: "name must be unique",
+    });
   }
   const person = {
     name: body.name,
