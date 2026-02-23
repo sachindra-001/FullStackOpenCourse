@@ -16,9 +16,17 @@ const App = () => {
   });
 
   // Fetch data
+  // Inside App.jsx
   useEffect(() => {
     noteService.getAll().then((initialNotes) => {
-      setPersons(initialNotes);
+      // If your backend returns { "persons": [...] }
+      if (initialNotes.persons) {
+        setPersons(initialNotes.persons);
+      }
+      // If your backend returns the array directly [...]
+      else if (Array.isArray(initialNotes)) {
+        setPersons(initialNotes);
+      }
     });
   }, []);
 
