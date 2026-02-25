@@ -1,10 +1,13 @@
 const express = require("express");
+require("dotenv").config();
 const app = express();
 const morgan = require("morgan");
 const cors = require("cors");
 app.use(morgan("tiny"));
 app.use(cors());
 app.use(express.static("dist"));
+const Person = require("./models/person");
+
 let persons = [
   {
     id: "1",
@@ -31,9 +34,10 @@ let persons = [
 app.use(express.json());
 
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  Person.find({}).then((persons) => {
+    response.json(persons);
+  });
 });
-
 morgan.token("body", (req, res) => {
   return req.method === "POST" ? JSON.stringify(req.body) : "";
 });
@@ -66,41 +70,32 @@ app.get("/api/persons/:id", (request, response) => {
   }
 });
 
-app.delete("/api/persons/:id", (request, response) => {
-  const id = request.params.id;
-  persons = persons.filter((person) => person.id !== id);
-
-  response.status(204).end();
+app.delete("/api/persons/:id", (request, response, next) => {
+  Person.findByIdAndDelete(request.params.id)
+    .then((result) => {
+      response.status(204).end();
+    })
+    .catch((error) => next(error));
 });
+
 const generateId = () => {
   const maxId =
     persons.length > 0 ? Math.max(...persons.map((p) => Number(p.id))) : 0;
   return String(maxId + 1);
 };
-
 app.post("/api/persons", (request, response) => {
   const body = request.body;
 
-  if (!body.name || !body.number) {
-    return response.status(400).json({
-      error: "name or number missing",
-    });
+  if (body.name === undefined || body.number === undefined) {
+    return response.status(400).json({ error: "content missing" });
   }
-  const nameExists = persons.find(
-    (p) => p.name.toLowerCase() === body.name.toLowerCase(),
-  );
-  if (nameExists) {
-    return response.status(400).json({
-      error: "name must be unique",
-    });
-  }
-  const person = {
+
+  const person = new Person({
     name: body.name,
     number: body.number,
-    id: generateId(),
-  };
+  });
 
-  persons = persons.concat(person);
-
-  response.json(persons);
+  person.save().then((savedPerson) => {
+    response.json(savedPerson);
+  });
 });
