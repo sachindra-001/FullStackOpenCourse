@@ -7,6 +7,14 @@ app.use(morgan("tiny"));
 app.use(cors());
 app.use(express.static("dist"));
 const Person = require("./models/person");
+const requestLogger = (request, response, next) => {
+  console.log("Method:", request.method);
+  console.log("Path:  ", request.path);
+  console.log("Body:  ", request.body);
+  console.log("---");
+  next();
+};
+app.use(requestLogger);
 
 let persons = [
   {
@@ -45,29 +53,29 @@ morgan.token("body", (req, res) => {
 app.use(
   morgan(":method :url :status :res[content-length] - :response-time ms :body"),
 );
-const PORT = 3001;
+
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-app.get("/info", (request, response) => {
-  const count = persons.length; // Calculates the number of items in the array
-  const date = new Date(); // Gets the current date and time
-
-  response.send(`
-    <p>Phonebook has info for ${count} people</p>
-    <p>${date}</p>
-  `);
+app.get("/info", (request, response, next) => {
+  Person.countDocuments({})
+    .then((count) => {
+      const date = new Date();
+      response.send(`
+        <p>Phonebook has info for ${count} people</p>
+        <p>${date}</p>
+      `);
+    })
+    .catch((error) => next(error));
 });
-app.get("/api/persons/:id", (request, response) => {
-  const id = request.params.id;
-  const person = persons.find((person) => person.id === id);
-
-  if (person) {
-    response.json(person);
-  } else {
-    response.status(404).end();
-  }
+app.get("/api/persons/:id", (request, response, next) => {
+  Person.findById(request.params.id)
+    .then((person) => {
+      response.json(person);
+    })
+    .catch((error) => next(error));
 });
 
 app.delete("/api/persons/:id", (request, response, next) => {
@@ -77,12 +85,30 @@ app.delete("/api/persons/:id", (request, response, next) => {
     })
     .catch((error) => next(error));
 });
+app.put("/api/persons/:id", (request, response, next) => {
+  const { name, number } = request.body;
 
+  Person.findById(request.params.id)
+    .then((person) => {
+      if (!person) {
+        return response.status(404).end();
+      }
+
+      person.name = name;
+      person.number = number;
+
+      return person.save().then((updatedPerson) => {
+        response.json(updatedPerson);
+      });
+    })
+    .catch((error) => next(error));
+});
 const generateId = () => {
   const maxId =
     persons.length > 0 ? Math.max(...persons.map((p) => Number(p.id))) : 0;
   return String(maxId + 1);
 };
+
 app.post("/api/persons", (request, response) => {
   const body = request.body;
 
@@ -99,3 +125,14 @@ app.post("/api/persons", (request, response) => {
     response.json(savedPerson);
   });
 });
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  }
+
+  next(error);
+};
+app.use(errorHandler);
