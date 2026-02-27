@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import noteService from "./services/phone";
+import personService from "./services/phone"; // Check if your file is named 'phone.js' or 'persons.js'
 import Notification from "./notification";
 import "./index.css";
 
@@ -15,22 +15,13 @@ const App = () => {
     type: "success",
   });
 
-  // Fetch data
-  // Inside App.jsx
+  // Fetch initial data
   useEffect(() => {
-    noteService.getAll().then((initialNotes) => {
-      // If your backend returns { "persons": [...] }
-      if (initialNotes.persons) {
-        setPersons(initialNotes.persons);
-      }
-      // If your backend returns the array directly [...]
-      else if (Array.isArray(initialNotes)) {
-        setPersons(initialNotes);
-      }
+    personService.getAll().then((initialPersons) => {
+      setPersons(initialPersons);
     });
   }, []);
 
-  // Add / Update person
   const addPerson = (event) => {
     event.preventDefault();
 
@@ -38,15 +29,16 @@ const App = () => {
       (p) => p.name.toLowerCase() === newName.toLowerCase(),
     );
 
-    // UPDATE
+    // --- CASE 1: UPDATE EXISTING PERSON ---
     if (existingPerson) {
-      if (window.confirm(`${newName} is already added, replace number?`)) {
-        const changedPerson = {
-          ...existingPerson,
-          number: newNumber,
-        };
+      if (
+        window.confirm(
+          `${newName} is already added to phonebook, replace the old number with a new one?`,
+        )
+      ) {
+        const changedPerson = { ...existingPerson, number: newNumber };
 
-        noteService
+        personService
           .update(existingPerson.id, changedPerson)
           .then((returnedPerson) => {
             setPersons(
@@ -54,93 +46,105 @@ const App = () => {
                 p.id !== existingPerson.id ? p : returnedPerson,
               ),
             );
-
-            setMessage({
-              message: `Updated ${returnedPerson.name}`,
-              type: "success",
-            });
-
             setNewName("");
             setNewNumber("");
-
-            setTimeout(() => {
-              setMessage({ message: null, type: "success" });
-            }, 5000);
-          })
-          .catch(() => {
-            // If person already deleted in another browser
             setMessage({
-              message: `Information of ${newName} has already been removed from server`,
+              message: `Updated ${returnedPerson.name}'s number`,
+              type: "success",
+            });
+            setTimeout(
+              () => setMessage({ message: null, type: "success" }),
+              5000,
+            );
+          })
+          .catch((error) => {
+            // Check if error is from Mongoose validation or missing person
+            const errorMsg = error.response?.data?.error
+              ? error.response.data.error
+              : `Information of ${newName} has already been removed from server`;
+
+            setMessage({
+              message: errorMsg,
               type: "error",
             });
 
-            setPersons(persons.filter((p) => p.id !== existingPerson.id));
+            if (!error.response?.data?.error) {
+              setPersons(persons.filter((p) => p.id !== existingPerson.id));
+            }
 
-            setTimeout(() => {
-              setMessage({ message: null, type: "error" });
-            }, 5000);
+            setTimeout(
+              () => setMessage({ message: null, type: "success" }),
+              5000,
+            );
           });
       }
     }
-
-    // CREATE
+    // --- CASE 2: CREATE NEW PERSON ---
     else {
       const personObject = {
         name: newName,
         number: newNumber,
       };
 
-      noteService.create(personObject).then((returnedPerson) => {
-        setPersons(persons.concat(returnedPerson));
-
-        setMessage({
-          message: `Added ${returnedPerson.name}`,
-          type: "success",
+      personService
+        .create(personObject)
+        .then((returnedPerson) => {
+          setPersons(persons.concat(returnedPerson));
+          setNewName("");
+          setNewNumber("");
+          setMessage({
+            message: `Added ${returnedPerson.name}`,
+            type: "success",
+          });
+          setTimeout(
+            () => setMessage({ message: null, type: "success" }),
+            5000,
+          );
+        })
+        .catch((error) => {
+          // Access the "error" key from your Backend JSON
+          console.log("Validation Error:", error.response.data.error);
+          setMessage({
+            message: error.response.data.error,
+            type: "error",
+          });
+          setTimeout(
+            () => setMessage({ message: null, type: "success" }),
+            5000,
+          );
         });
-
-        setNewName("");
-        setNewNumber("");
-
-        setTimeout(() => {
-          setMessage({ message: null, type: "success" });
-        }, 5000);
-      });
     }
   };
 
-  // Delete person
   const deletePerson = (id, name) => {
     if (window.confirm(`Delete ${name}?`)) {
-      noteService
+      personService
         .remove(id)
         .then(() => {
           setPersons(persons.filter((p) => p.id !== id));
-
           setMessage({
             message: `Deleted ${name}`,
             type: "success",
           });
-
-          setTimeout(() => {
-            setMessage({ message: null, type: "success" });
-          }, 5000);
+          setTimeout(
+            () => setMessage({ message: null, type: "success" }),
+            5000,
+          );
         })
         .catch(() => {
           setMessage({
             message: `Information of ${name} was already removed`,
             type: "error",
           });
-
           setPersons(persons.filter((p) => p.id !== id));
-
-          setTimeout(() => {
-            setMessage({ message: null, type: "error" });
-          }, 5000);
+          setTimeout(
+            () => setMessage({ message: null, type: "success" }),
+            5000,
+          );
         });
     }
   };
 
-  // Filter
   const personsToShow =
     searchQuery === ""
       ? persons
@@ -151,11 +155,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-
-      {/* Notification */}
       <Notification message={message} />
 
-      {/* Filter */}
       <div>
         filter shown with:{" "}
         <input
@@ -164,15 +165,12 @@ const App = () => {
         />
       </div>
 
-      {/* Form */}
       <h3>Add a new</h3>
-
       <form onSubmit={addPerson}>
         <div>
           name:{" "}
           <input value={newName} onChange={(e) => setNewName(e.target.value)} />
         </div>
-
         <div>
           number:{" "}
           <input
@@ -180,15 +178,12 @@ const App = () => {
             onChange={(e) => setNewNumber(e.target.value)}
           />
         </div>
-
         <div>
           <button type="submit">add</button>
         </div>
       </form>
 
-      {/* Numbers */}
       <h3>Numbers</h3>
-
       {personsToShow.map((person) => (
         <p key={person.id}>
           {person.name} {person.number}{" "}
