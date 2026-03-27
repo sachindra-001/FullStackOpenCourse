@@ -1,20 +1,64 @@
-# React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+# Phonebook & Contact Manager (Full Stack)
 
-## React Compiler
+A production-ready full-stack web application designed to manage personal contact information. This project focuses on seamless frontend-backend synchronization and secure data persistence using a cloud-based database.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚀 Live Demo
+https://fullstackopencourse-l7jx.onrender.com/
 
-## Expanding the ESLint configuration
+## ✨ Features
+- **Full CRUD Functionality:** Create, Read, Update, and Delete contact entries.
+- **Backend Validation:** Implements strict Mongoose schema validation to ensure phone numbers follow specific formats and names are unique.
+- **Cloud Persistence:** Data is stored and managed using **MongoDB Atlas**.
+- **Real-time Notifications:** Integrated user feedback system for successful operations and error handling (e.g., validation errors or connection issues).
+- **Responsive UI:** A clean, mobile-friendly interface built with React.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🛠️ Tech Stack
+- **Frontend:** React, CSS3
+- **Backend:** Node.js, Express.js
+- **Database:** MongoDB (Mongoose ODM)
+- **Deployment:** [e.g., Render / Fly.io]
+- **Tools:** Postman, Git
 
-cmds:
-npx json-server --port 3001 --watch db.json
-npm create vite@latest your-project-name -- --template react
+## 📦 Installation & Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/sachindra-001/FullStackOpenCourse.git](https://github.com/sachindra-001/FullStackOpenCourse.git)
+   cd part3/phonebook-backend
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Variables:**
+   Create a `.env` file in the root directory and add your MongoDB URI:
+   ```env
+   MONGODB_URI=your_mongodb_connection_string
+   PORT=3001
+   ```
+
+4. **Run the application:**
+   - **Development mode:** `npm run dev`
+   - **Production mode:** `npm start`
+
+## 📡 API Endpoints
+| Method | Endpoint         | Description                   |
+| :---   | :---             | :---                          |
+| GET    | `/api/persons`   | Get all contacts              |
+| GET    | `/api/persons/:id`| Get a single contact          |
+| POST   | `/api/persons`   | Add a new contact             |
+| PUT    | `/api/persons/:id`| Update an existing contact    |
+| DELETE | `/api/persons/:id`| Delete a contact              |
+
+## 🧪 Key Learnings
+- Managing asynchronous operations between a React frontend and an Express backend.
+- Implementing centralized error-handling middleware in Node.js.
+- Configuring environment variables for secure sensitive data management in production.
+- Deploying a full-stack application with a build script that connects the frontend and backend.
+
+Developed as part of the **Full Stack Open** course.
