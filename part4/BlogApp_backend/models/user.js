@@ -1,13 +1,18 @@
 const mongoose = require('mongoose')
 
 const userSchema = new mongoose.Schema({
-  username: String,
+  username: {
+    type: String,
+    required: true,
+    unique: true, // This ensures uniqueness at the DB level
+    minlength: 3,
+  },
   name: String,
   passwordHash: String,
-  notes: [
+  blogs: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Note',
+      ref: 'Blog', // This must match the name used in mongoose.model('Blog', ...)
     },
   ],
 })
@@ -17,8 +22,7 @@ userSchema.set('toJSON', {
     returnedObject.id = returnedObject._id.toString()
     delete returnedObject._id
     delete returnedObject.__v
-    // the passwordHash should not be revealed
-    delete returnedObject.passwordHash
+    delete returnedObject.passwordHash // Never reveal the hash
   },
 })
 
