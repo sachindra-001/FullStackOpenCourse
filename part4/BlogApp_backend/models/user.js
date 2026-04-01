@@ -5,7 +5,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true, // This ensures uniqueness at the DB level
-    minlength: 3,
   },
   name: String,
   passwordHash: String,

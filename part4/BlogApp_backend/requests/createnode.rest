@@ -2,9 +2,8 @@ POST http://localhost:3001/api/blog
 Content-Type: application/json
 
 {
-  "title": "Ram raheem",
-  "author": "Michael Chan",
-  "url": "https://reactpatterns.com/",
-  "likes": 7,
-  "id":"69c3a7fa482e56c05669f8e4"
+  "title": "My First Blog",
+  "author": "Sachindra",
+  "url": "https://example.com",
+  "userId": "69cbf77175861b5c339d4448"
 }

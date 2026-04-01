@@ -1,17 +1,20 @@
 const blogRouter = require('express').Router()
 const { response } = require('express')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 blogRouter.get('/', async (request, response) => {
-  const blog = await Blog.find({})
-  response.json(blog)
+  const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 })
+  response.json(blogs)
 })
-
 blogRouter.post('/', async (request, response, next) => {
   const body = request.body
-
   if (!body.title || !body.url) {
-    return response.status(400).json
+    return response.status(400).json({ error: 'title or url missing' })
+  }
+  const user = await User.findById(body.userId)
+  if (!user) {
+    return response.status(404).json({ error: 'user not found' })
   }
 
   const blog = new Blog({
@@ -19,16 +22,18 @@ blogRouter.post('/', async (request, response, next) => {
     author: body.author,
     url: body.url,
     likes: body.likes || 0,
+    user: user.id, // Links the blog to the user
   })
 
   try {
     const savedBlog = await blog.save()
-    response.status(200).json(savedBlog)
+    user.blogs = user.blogs.concat(savedBlog._id)
+    await user.save()
+    response.status(201).json(savedBlog)
   } catch (exception) {
     next(exception)
   }
 })
-
 blogRouter.delete('/:id', async (request, response, next) => {
   try {
     // 2. Use the correct Model (Blog instead of Note)
