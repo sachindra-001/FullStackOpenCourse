@@ -4,6 +4,7 @@ const config = require('./utils/config')
 const logger = require('./utils/logger')
 const middleware = require('./utils/middleware')
 const blogRouter = require('./controller/blog')
+const loginRouter = require('./controller/login')
 
 const usersRouter = require('./controller/user')
 
@@ -26,6 +27,7 @@ app.use(middleware.requestLogger)
 
 app.use('/api/blog', blogRouter)
 app.use('/api/users', usersRouter)
+app.use('/api/login', loginRouter)
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)
