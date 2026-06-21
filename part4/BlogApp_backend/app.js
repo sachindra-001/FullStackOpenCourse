@@ -25,7 +25,8 @@ app.use(express.static('dist'))
 app.use(express.json())
 app.use(middleware.requestLogger)
 
-app.use('/api/blog', blogRouter)
+app.use('/api/blogs', blogRouter)
+console.log('BLOG ROUTER REGISTERED')
 app.use('/api/users', usersRouter)
 app.use('/api/login', loginRouter)
 
