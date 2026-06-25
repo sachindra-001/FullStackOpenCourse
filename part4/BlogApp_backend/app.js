@@ -3,7 +3,14 @@ const mongoose = require('mongoose')
 const config = require('./utils/config')
 const logger = require('./utils/logger')
 const middleware = require('./utils/middleware')
-const blogRouter = require('./controller/blog')
+const blogRouter = (() => {
+  try {
+    return require('./controller/blog')
+  } catch (e) {
+    console.error('❌ FAILED TO LOAD BLOG ROUTER:', e.message)
+    throw e
+  }
+})()
 const loginRouter = require('./controller/login')
 
 const usersRouter = require('./controller/user')
@@ -21,7 +28,6 @@ mongoose
     logger.error('error connection to MongoDB:', error.message)
   })
 
-app.use(express.static('dist'))
 app.use(express.json())
 app.use(middleware.requestLogger)
 
@@ -30,7 +36,6 @@ console.log('BLOG ROUTER REGISTERED')
 app.use('/api/users', usersRouter)
 app.use('/api/login', loginRouter)
 
-app.use(middleware.unknownEndpoint)
-app.use(middleware.errorHandler)
+app.use(express.static('dist'))
 
 module.exports = app
